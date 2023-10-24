@@ -3,9 +3,10 @@ import math
 import copy
 import numpy as np
 import pyswarms
+from scipy.optimize import dual_annealing
 
 class SimulatedAnnealing:
-    def __init__(self, T_start: float, T_stop: float, iterations: int, step_decrease_rate=0.0):
+    def __init__(self, T_start: float, T_stop: float, iterations: int, step_decrease_rate=0.0, step=0.01):
         if (T_start < T_stop):
             raise ValueError("T_start must be greater than T_stop")
         
@@ -14,8 +15,10 @@ class SimulatedAnnealing:
         self.iterations = iterations
         self.alpha = (T_start - T_stop) / iterations
         self.step_decrease_rate = step_decrease_rate
+        self.step = step
     
-    def minimize(self, func, args, x0, step, bounds):
+    #def minimize(self, func, args, x0, step, bounds):
+    def minimize(self, func, bounds, **kwargs):
         """Performs minimization procedure using simulated annealing
         
         Arguments:
@@ -29,7 +32,8 @@ class SimulatedAnnealing:
             xo: optimal point where the function is minimum in form of [xo1, xo2, ..., xon]
             
         """
-        
+        args = tuple(kwargs.values())
+        x0 = kwargs["x_original"]
         T = self.T_start
         x = copy.deepcopy(x0)
         x_best = copy.deepcopy(x0)
@@ -37,7 +41,7 @@ class SimulatedAnnealing:
         E_best = func(x_best, *args)
         
         while T > self.T_stop:
-            x_next = self.make_step(x, step, bounds)
+            x_next = self.make_step(x, self.step, bounds)
             E_next = func(x_next, *args)
             dE = E_next - E         
             
@@ -64,12 +68,14 @@ class SimulatedAnnealing:
 
         return x_best
             
-            
-    def make_step(self, x, step, bounds):
+    def make_step(self, x, step, bounds, discrete_step=True):
         """ Randomly finds next step """
 
         # dx = np.random.uniform(-step, step, size=x.shape[-1])
-        dx = np.random.choice([-step, 0, step], size=x.shape[-1])
+        if discrete_step:
+            dx = np.random.choice([-step, 0, step], size=x.shape[-1])
+        else:
+            dx = np.random.uniform(-step, step, size=x.shape[-1])
         #print(dx)
         x_next = x + dx
         
@@ -107,4 +113,29 @@ class ParticleSwarmOptimization:
         pso_opt = pyswarms.single.GlobalBestPSO(n_particles=self.n_particles, dimensions=len(min_bounds), bounds=bounds, options=self.options, ftol_iter=self.patience, ftol=self.ftol)
         best_cost, best = pso_opt.optimize(func, iters=self.iterations, **kwargs)
         
+        return best
+    
+class DualAnnealing:
+    def __init__(self, initial_temp=5230.0, restart_temp_ratio=2e-05, visit=2.62, accept=-5.0, maxiter=1000, maxfun=1e7) -> None:
+        self.initial_temp = initial_temp
+        self.restart_temp_ratio = restart_temp_ratio
+        self.visit = visit
+        self.accept = accept 
+        self.maxiter = maxiter
+        self.maxfun = maxfun
+
+    def minimize(self, func, bounds, **kwargs):
+
+        args = tuple(kwargs.values())
+        x0 = kwargs["x_original"]
+        result = dual_annealing(func, bounds, args=args, 
+                                initial_temp=self.initial_temp, 
+                                restart_temp_ratio=self.restart_temp_ratio, 
+                                visit = self.visit,
+                                accept = self.accept,
+                                maxiter = self.maxiter,
+                                maxfun = self.maxfun,
+                                x0=x0)
+        
+        best = result.x
         return best

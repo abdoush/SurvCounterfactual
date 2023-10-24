@@ -80,14 +80,14 @@ class Autoencoder(nn.Module):
         
         return decoded
     
-    def anomaly_score(self, X, anomaly_threshold=None, beta=100):
+    def anomaly_score(self, X, anomaly_threshold=None, power=1):
         """ Calculates reconstruction error of the sample X"""
         X = torch.Tensor(X)
         X_pred = self.forward(X)
         error = torch.sum((X - X_pred) ** 2, axis=1)
 
         if anomaly_threshold is not None:
-            anomaly_score = nn.Softplus(beta=beta)(error - anomaly_threshold)
+            anomaly_score = nn.ReLU()(torch.pow(error/anomaly_threshold, power) - 1)
         else:
             anomaly_score = error
 

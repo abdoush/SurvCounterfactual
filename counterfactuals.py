@@ -123,6 +123,12 @@ class CounterfactualExplainer:
         if verbose:
             print("Loss Target: %.3g, Loss Distance: %.3g, Loss Anomaly: %.3g, Total: %.3g" % (loss_target, loss_distance, loss_anomaly, total_loss))
         
+        # to be applicable for PSO the loss function returns array of shape (n_partciles, )
+        # for other algorithms it is enough to return a single number, so here we convert array with one estimate to float
+        if total_loss.shape[0] == 1:
+            total_loss = total_loss[0]
+            return total_loss
+        
         return total_loss
            
     
