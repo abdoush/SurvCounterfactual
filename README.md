@@ -2,6 +2,8 @@
 
 
 The official repository for the paper "Understanding Survival Models through Counterfactual Explanations" published at the 24th International Conference on Computational Science (ICCS) 2024.
+Link: https://link.springer.com/chapter/10.1007/978-3-031-63772-8_28
+
 ## BibTeX Citation
 ```
 @InProceedings{10.1007/978-3-031-63772-8_28,
